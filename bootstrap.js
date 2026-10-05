@@ -37,6 +37,15 @@ async function startup({ rootURI }) {
   // used by other plugins such as LaTeX Suite.
   noteObserver = { observe(doc) { try { attachNote(doc); } catch (error) { Zotero.logError(error); } } };
   Services.obs.addObserver(noteObserver, 'document-element-inserted');
+  // Sidebar editors can be preloaded before startup without an EditorInstance.
+  // Include existing frame documents, not just notes already opened for editing.
+  function scanWindow(win) {
+    try {
+      attachNote(win.document);
+      for (let i = 0; i < win.frames.length; i++) scanWindow(win.frames[i]);
+    } catch (error) { Zotero.debug('TikZ-CD frame scan: ' + error); }
+  }
+  for (const win of Services.wm.getEnumerator(null)) scanWindow(win);
   for (const instance of Zotero.Notes._editorInstances || []) attachNote(instance._iframeWindow?.document);
 }
 function shutdown() {

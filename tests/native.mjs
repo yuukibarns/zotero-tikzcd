@@ -13,7 +13,7 @@ try {
   await mkdir(helper, { recursive: true });
   await writeFile(path.join(profile, 'user.js'), 'user_pref("extensions.autoDisableScopes",0);\nuser_pref("extensions.startupScanScopes",15);\nuser_pref("extensions.update.enabled",false);\nuser_pref("extensions.zotero.firstRun2",false);');
   await writeFile(path.join(helper, 'manifest.json'), JSON.stringify({manifest_version:2,name:'Tikzcd test',version:'1.0',applications:{zotero:{id:'tikzcd-test@example.invalid',strict_min_version:'10.0',strict_max_version:'10.*',update_url:'https://example.invalid/updates.json'}}}));
-  await writeFile(path.join(helper, 'bootstrap.js'), 'const CONFIG=' + JSON.stringify({result,screenshot,withLatex}) + ';\n' + await readFile('tests/note-native-helper.js','utf8'));
+  await writeFile(path.join(helper, 'bootstrap.js'), 'const CONFIG=' + JSON.stringify({result,screenshot,withLatex,sidebar:process.argv.includes('--sidebar')}) + ';\n' + await readFile('tests/note-native-helper.js','utf8'));
   const {version} = JSON.parse(await readFile('manifest.json','utf8'));
   await copyFile(`../../outputs/tikzcd-preview-${version}.xpi`, path.join(profile,'extensions','tikzcd-preview@yuukibarns.xpi'));
   if(withLatex){

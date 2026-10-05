@@ -7,7 +7,15 @@ async function run(){
   const check=(v,m)=>{if(!v)throw new Error(m);};
   await Zotero.Libraries.get(Zotero.Libraries.userLibraryID).waitForDataLoad('item');
   const item=new Zotero.Item('note');item.setNote('<div data-schema-version="9"><p>test</p></div>');await item.saveTx();
-  const instance=await Zotero.Notes.open(item.id,undefined,{openInWindow:true});
+  let instance;
+  if(CONFIG.sidebar){
+    await Zotero.getMainWindow().ZoteroPane.selectItem(item.id);
+    for(let i=0;i<100&&!instance;i++){
+      instance=Zotero.Notes._editorInstances.find(e=>e.itemID===item.id);
+      if(!instance)await Zotero.Promise.delay(100);
+    }
+    check(instance,'Sidebar editor initialized');
+  }else instance=await Zotero.Notes.open(item.id,undefined,{openInWindow:true});
   const frame=instance._iframeWindow,w=frame.wrappedJSObject;
   frame.docShell.chromeEventHandler.ownerGlobal.resizeTo(1100,850);
   for(let i=0;i<100&&(!w.__tikzcdNotes||!w._currentEditorInstance?._editorCore?.view);i++)await Zotero.Promise.delay(100);
