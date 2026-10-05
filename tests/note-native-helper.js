@@ -68,10 +68,11 @@ C \arrow[r,"k"'] & D
   check(!doc.querySelector('.math-render .tikzcd-note-output')?.dataset.source?.includes('X \\arrow'),'Typing does not rerender');
   if(CONFIG.withLatex){const p=doc.getElementById('latex-suite-math-preview');check(!p||frame.getComputedStyle(p).display==='none','No stale generic preview');}
   check(w.math._innerView.state.doc.textContent.includes('X \\arrow'),'Native source edit kept');
-  if(CONFIG.withLatex){
-    inject(`window.__latexSuiteDiagnosePrint=html=>window.exportedHTML=html;var menu=document.createElement('div');menu.className='popup';document.querySelector('.more-dropdown').append(menu);`);
-    await waitFor(()=>doc.getElementById('latex-suite-print-menu-item'),'Print action attached');
-    inject(`document.getElementById('latex-suite-print-menu-item').click();`);
+  if(CONFIG.withPDF){
+    await waitFor(()=>!!w.__notePDF,'Independent PDF plugin injected');
+    inject(`window.__notePDFOpen=html=>window.exportedHTML=html;var menu=document.createElement('div');menu.className='popup';document.querySelector('.more-dropdown').append(menu);`);
+    await waitFor(()=>doc.getElementById('note-pdf-print-menu-item'),'Print action attached');
+    inject(`document.getElementById('note-pdf-print-menu-item').click();`);
     await waitFor(()=>!!w.exportedHTML,'PDF snapshot prepared while source is open');
     check(w.exportedHTML.includes('tikzcd-graph'),'PDF includes diagram');
     check(w.exportedHTML.includes('clipping-mask'),'PDF preserves SVG masks');
