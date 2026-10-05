@@ -69,7 +69,9 @@ C \arrow[r,"k"'] & D
   if(CONFIG.withLatex){const p=doc.getElementById('latex-suite-math-preview');check(!p||frame.getComputedStyle(p).display==='none','No stale generic preview');}
   check(w.math._innerView.state.doc.textContent.includes('X \\arrow'),'Native source edit kept');
   if(CONFIG.withLatex){
-    inject(`window.__latexSuiteDiagnosePrint=html=>window.exportedHTML=html;document.getElementById('latex-suite-print-menu-item').click();`);
+    inject(`window.__latexSuiteDiagnosePrint=html=>window.exportedHTML=html;var menu=document.createElement('div');menu.className='popup';document.querySelector('.more-dropdown').append(menu);`);
+    await waitFor(()=>doc.getElementById('latex-suite-print-menu-item'),'Print action attached');
+    inject(`document.getElementById('latex-suite-print-menu-item').click();`);
     await waitFor(()=>!!w.exportedHTML,'PDF snapshot prepared while source is open');
     check(w.exportedHTML.includes('tikzcd-graph'),'PDF includes diagram');
     check(w.exportedHTML.includes('clipping-mask'),'PDF preserves SVG masks');
