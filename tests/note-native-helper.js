@@ -3,10 +3,13 @@ function shutdown(){}
 function install(){}
 function uninstall(){}
 async function run(){
+  await IOUtils.writeUTF8(CONFIG.result,JSON.stringify({stage:'initializing Zotero'}));
   await Zotero.initializationPromise;await Zotero.uiReadyPromise;
+  await IOUtils.writeUTF8(CONFIG.result,JSON.stringify({stage:'opening note'}));
   const check=(v,m)=>{if(!v)throw new Error(m);};
   const item=new Zotero.Item('note');item.setNote('<div data-schema-version="9"><p>test</p></div>');await item.saveTx();
   const instance=await Zotero.Notes.open(item.id,undefined,{openInWindow:true});
+  await IOUtils.writeUTF8(CONFIG.result,JSON.stringify({stage:'note opened'}));
   const frame=instance._iframeWindow,w=frame.wrappedJSObject;
   frame.docShell.chromeEventHandler.ownerGlobal.resizeTo(1100,850);
   for(let i=0;i<100&&(!w.__tikzcdNotes||!w._currentEditorInstance?._editorCore?.view);i++)await Zotero.Promise.delay(100);
@@ -70,6 +73,7 @@ C \arrow[r,"k"'] & D
   check(w.math._innerView.state.doc.textContent.includes('X \\arrow'),'Native source edit kept');
   if(CONFIG.withPDF){
     await waitFor(()=>!!w.__notePDF,'Independent PDF plugin injected');
+    Zotero.Prefs.set('extensions.note-pdf-export.theme','dark',true);
     inject(`window.__notePDFOpen=html=>window.exportedHTML=html;var menu=document.createElement('div');menu.className='popup';document.querySelector('.more-dropdown').append(menu);`);
     await waitFor(()=>doc.getElementById('note-pdf-print-menu-item'),'Print action attached');
     inject(`document.getElementById('note-pdf-print-menu-item').click();`);
@@ -77,6 +81,7 @@ C \arrow[r,"k"'] & D
     check(w.exportedHTML.includes('tikzcd-graph'),'PDF includes diagram');
     check(w.exportedHTML.includes('clipping-mask'),'PDF preserves SVG masks');
     check(w.exportedHTML.includes('.tikzcd-diagram {'),'PDF includes renderer CSS');
+    check(w.exportedHTML.includes('data-theme="dark"'),'Independent export theme setting applied');
     await IOUtils.writeUTF8(CONFIG.screenshot+'.html',w.exportedHTML);
   }
   // Record the editing view for visual inspection.
@@ -100,5 +105,12 @@ C \arrow[r,"k"'] & D
   check(doc.querySelectorAll('math-display')[1].querySelector('.katex'),'Disable leaves normal equations intact');
   await addon.enable();
   await waitFor(()=>doc.querySelector('math-display .tikzcd-diagram')?.style.visibility==='','Re-enable attaches to existing editor');
+  if(CONFIG.withPDF){
+    const exporter=await AddonManager.getAddonByID('note-pdf-export@yuukibarns');
+    await exporter.disable();
+    check(!w.__notePDF&&!doc.getElementById('note-pdf-print-menu-item'),'Exporter disable cleans controller and menu');
+    await exporter.enable();await waitFor(()=>!!w.__notePDF,'Exporter re-enable attaches');
+    check(w.__notePDFTheme()==='dark','Export theme persists across restart');
+  }
   await IOUtils.writeUTF8(CONFIG.result,JSON.stringify({done:true,passed:true,zotero:Zotero.version,withLatex:CONFIG.withLatex,screenshot:CONFIG.screenshot}));
 }

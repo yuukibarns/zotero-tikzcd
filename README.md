@@ -6,7 +6,7 @@ private MathView API, with checks for the expected interface.
 
 ## Usage
 
-Install `tikzcd-preview-0.2.7.xpi`, then paste a complete block into a display-math
+Install `tikzcd-preview-0.2.8.xpi`, then paste a complete block into a display-math
 node in a note:
 
 ```latex
@@ -27,7 +27,7 @@ visual editor or diagram caret/selection mapping. Without this plugin Zotero
 cannot render `tikzcd`; use an exported Quiver image when portability matters.
 For visual editing, use [Quiver](https://q.uiver.app/).
 
-PDF export works through LaTeX Suite 0.5.3.99's **Print / PDF** action. It renders
+PDF export works through the independent Note PDF Export plugin's **Print / PDF** action. It renders
 a fresh diagram snapshot (including when source is open), embeds renderer styles,
 and preserves SVG mask references. Both light and dark export themes inherit
 their normal colors. Unsupported/invalid diagrams stop export with an error.

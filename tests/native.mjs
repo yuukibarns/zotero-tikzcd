@@ -26,7 +26,7 @@ try {
   for (let i=0; i<120; i++) {
     let data; try { data=JSON.parse(await readFile(result,'utf8')); } catch(e) { if(e.code!=='ENOENT') throw e; }
     if (data?.done) { console.log(JSON.stringify(data,null,2)); if(data.error) throw new Error(data.error); break; }
-    if(i===119) throw new Error('Native test timed out');
+    if(i===119) throw new Error('Native test timed out: '+JSON.stringify(data));
     await pause(500);
   }
 } finally {
