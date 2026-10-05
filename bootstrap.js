@@ -39,10 +39,14 @@ async function startup({ rootURI }) {
   Services.obs.addObserver(noteObserver, 'document-element-inserted');
   // Sidebar editors can be preloaded before startup without an EditorInstance.
   // Include existing frame documents, not just notes already opened for editing.
+  const visited = new Set();
   function scanWindow(win) {
     try {
+      if (!win || visited.has(win.document)) return;
+      visited.add(win.document);
       attachNote(win.document);
       for (let i = 0; i < win.frames.length; i++) scanWindow(win.frames[i]);
+      for (const frame of win.document.querySelectorAll('iframe, browser')) scanWindow(frame.contentWindow);
     } catch (error) { Zotero.debug('TikZ-CD frame scan: ' + error); }
   }
   for (const win of Services.wm.getEnumerator(null)) scanWindow(win);
