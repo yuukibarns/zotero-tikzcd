@@ -1,0 +1,14 @@
+{
+  "name": "zotero-tikzcd",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "test": "node --test tests/renderer.test.mjs",
+    "test:native": "node tests/native.mjs",
+    "package": "python3 scripts/package.py"
+  },
+  "dependencies": { "katex": "0.16.22" },
+  "devDependencies": { "acorn": "8.15.0", "esbuild": "0.25.12", "jsdom": "26.1.0" }
+}

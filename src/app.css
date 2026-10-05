@@ -1,0 +1,16 @@
+:root { color-scheme: light dark; font: 15px system-ui, sans-serif; }
+body { margin: 0; padding: 24px; }
+h1 { font-size: 24px; margin: 0; } h1 small { font-size: 13px; font-weight: normal; opacity: .7; }
+h2 { font-size: 16px; margin: 0; }
+header p, footer, #hint { opacity: .7; line-height: 1.5; }
+main { display: grid; grid-template-columns: minmax(260px, 1fr) minmax(260px, 1fr); gap: 24px; }
+section { min-width: 0; }
+label { display: block; font-weight: 600; margin-bottom: 8px; }
+textarea { box-sizing: border-box; width: 100%; min-height: 280px; resize: vertical; padding: 12px; font: 15px/1.5 monospace; border: 1px solid #888; border-radius: 6px; }
+.actions { display: flex; gap: 8px; margin-top: 12px; }
+button { padding: 7px 14px; cursor: pointer; }
+#preview { overflow: auto; min-height: 200px; max-height: 70vh; border: 1px solid #888; border-radius: 6px; background: white; }
+#status { min-height: 1.5em; }
+#diagnostics { padding-left: 20px; color: light-dark(#9c2d13, #ffb7a4); }
+footer { margin-top: 24px; font-size: 12px; }
+@media (max-width: 700px) { main { grid-template-columns: 1fr; } }

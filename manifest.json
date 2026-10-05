@@ -1,0 +1,12 @@
+{
+  "manifest_version": 2,
+  "name": "TikZ-CD Preview (Prototype)",
+  "version": "0.1.0",
+  "description": "Offline preview of Quiver-compatible tikz-cd diagrams. Experimental, read-only note integration.",
+  "author": "yuukibarns",
+  "applications": { "zotero": {
+    "id": "tikzcd-preview@yuukibarns",
+    "strict_min_version": "10.0",
+    "strict_max_version": "10.*"
+  } }
+}

@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'none'; connect-src 'none'">
+  <title>TikZ-CD Preview — Prototype</title>
+  <link rel="stylesheet" href="katex.min.css">
+  <link rel="stylesheet" href="renderer.css">
+  <link rel="stylesheet" href="app.css">
+  <script defer src="app.js"></script>
+</head>
+<body>
+  <header><h1>TikZ-CD Preview <small>prototype</small></h1>
+    <p>Quiver-compatible diagrams, rendered locally. This window does not modify your notes.</p>
+  </header>
+  <main>
+    <section class="source"><label for="source">TikZ-CD source</label>
+      <textarea id="source" spellcheck="false" maxlength="20000" aria-describedby="hint"></textarea>
+      <div class="actions"><button id="render" type="button">Render</button><button id="example" type="button">Load example</button></div>
+      <p id="hint">Paste a complete \begin{tikzcd} … \end{tikzcd} block. Ctrl+Enter renders. This is not a full TikZ compiler.</p>
+    </section>
+    <section class="result"><h2>Preview</h2><p id="status" role="status" aria-live="polite"></p><ul id="diagnostics"></ul><div id="preview"></div></section>
+  </main>
+  <footer>Rendering based on Quiver (MIT) and KaTeX (MIT). No remote scripts or fonts. Note insertion and export are not implemented in this prototype.</footer>
+</body>
+</html>
