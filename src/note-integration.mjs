@@ -78,6 +78,7 @@ math-display[data-tikzcd] #latex-suite-math-preview:not([data-external-renderer]
     function closePreview() {
       previewTarget = null; cancel();
       if (surface) mount();
+      if (!math._innerView) refresh();
     }
     let timer = null, controller = null, current = null, requested = null, revision = 0;
     const hooks = [];
