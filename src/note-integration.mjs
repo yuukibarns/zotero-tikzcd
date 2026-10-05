@@ -48,7 +48,7 @@ math-display[data-tikzcd] #latex-suite-math-preview { display:none!important; }
       } finally { result?.dispose(); host.remove(); exports.delete(controller); }
     })();
   }
-  doc.addEventListener('note-pdf-export-math', exportMath);
+  doc.addEventListener('latex-suite-export-math', exportMath);
 
   function attach(node) {
     const math = node.pmViewDesc?.spec;
@@ -181,7 +181,7 @@ math-display[data-tikzcd] #latex-suite-math-preview { display:none!important; }
   function dispose() {
     if (stopped) return;
     stopped = true; observer.disconnect();
-    doc.removeEventListener('note-pdf-export-math', exportMath);
+    doc.removeEventListener('latex-suite-export-math', exportMath);
     for (const controller of exports) controller.abort();
     for (const state of [...states.values()]) state.release(true);
     style.remove(); win.removeEventListener('unload', dispose);

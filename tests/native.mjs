@@ -6,7 +6,6 @@ const pause = ms => new Promise(r => setTimeout(r, ms));
 const profile = await mkdtemp(path.join(tmpdir(), 'tikzcd-native-'));
 const helper = path.join(profile, 'extensions', 'tikzcd-test@example.invalid');
 const result = path.join(profile, 'result.json');
-const withPDF = true;
 const withLatex = process.argv.includes('--with-latex');
 const screenshot = path.resolve('build/native-note.png');
 let app;
@@ -14,10 +13,9 @@ try {
   await mkdir(helper, { recursive: true });
   await writeFile(path.join(profile, 'user.js'), 'user_pref("extensions.autoDisableScopes",0);\nuser_pref("extensions.startupScanScopes",15);\nuser_pref("extensions.update.enabled",false);\nuser_pref("extensions.zotero.firstRun2",false);');
   await writeFile(path.join(helper, 'manifest.json'), JSON.stringify({manifest_version:2,name:'Tikzcd test',version:'1.0',applications:{zotero:{id:'tikzcd-test@example.invalid',strict_min_version:'10.0',strict_max_version:'10.*',update_url:'https://example.invalid/updates.json'}}}));
-  await writeFile(path.join(helper, 'bootstrap.js'), 'const CONFIG=' + JSON.stringify({result,screenshot,withLatex,withPDF}) + ';\n' + await readFile('tests/note-native-helper.js','utf8'));
+  await writeFile(path.join(helper, 'bootstrap.js'), 'const CONFIG=' + JSON.stringify({result,screenshot,withLatex}) + ';\n' + await readFile('tests/note-native-helper.js','utf8'));
   const {version} = JSON.parse(await readFile('manifest.json','utf8'));
   await copyFile(`../../outputs/tikzcd-preview-${version}.xpi`, path.join(profile,'extensions','tikzcd-preview@yuukibarns.xpi'));
-  await copyFile('../../outputs/note-pdf-export-0.1.0.xpi',path.join(profile,'extensions','note-pdf-export@yuukibarns.xpi'));
   if(withLatex){
     const latex=JSON.parse(await readFile('../zotero-latex-suite/manifest.json','utf8'));
     await copyFile(`../../outputs/latex-suite-completion-${latex.version}.xpi`,path.join(profile,'extensions',latex.applications.zotero.id+'.xpi'));
@@ -26,7 +24,7 @@ try {
   for (let i=0; i<120; i++) {
     let data; try { data=JSON.parse(await readFile(result,'utf8')); } catch(e) { if(e.code!=='ENOENT') throw e; }
     if (data?.done) { console.log(JSON.stringify(data,null,2)); if(data.error) throw new Error(data.error); break; }
-    if(i===119) throw new Error('Native test timed out: '+JSON.stringify(data));
+    if(i===119) throw new Error('Native test timed out');
     await pause(500);
   }
 } finally {
