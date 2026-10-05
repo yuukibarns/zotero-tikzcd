@@ -11,6 +11,7 @@ async function run(){
   frame.docShell.chromeEventHandler.ownerGlobal.resizeTo(1100,850);
   for(let i=0;i<100&&(!w.__tikzcdNotes||!w._currentEditorInstance?._editorCore?.view);i++)await Zotero.Promise.delay(100);
   check(w.__tikzcdNotes,'Note content integration injected');
+  check(!Zotero.getMainWindow().document.getElementById('tikzcd-preview-open'),'No standalone preview menu entry');
   if(CONFIG.withLatex){for(let i=0;i<100&&!w.__latexSuite;i++)await Zotero.Promise.delay(100);check(w.__latexSuite,'LaTeX Suite also installed');}
   function inject(code){const script=frame.document.createElement('script');script.textContent=code;frame.document.head.append(script);script.remove();}
   const source=String.raw`\begin{tikzcd}
@@ -51,10 +52,11 @@ C \arrow[r,"k"'] & D
   frame.windowUtils.sendMouseEvent('mousedown',rect.x+rect.width/2,rect.y+rect.height/2,0,1,0);
   frame.windowUtils.sendMouseEvent('mouseup',rect.x+rect.width/2,rect.y+rect.height/2,0,1,0);
   await waitFor(()=>!!w.math._innerView,'Click opens native source editor');
-  await waitFor(()=>doc.querySelector(CONFIG.withLatex?'#latex-suite-math-preview .tikzcd-diagram':'math-display > .tikzcd-note-surface .tikzcd-diagram'),'Preview below source while editing');
-  if(CONFIG.withLatex){const p=doc.getElementById('latex-suite-math-preview');check(p&&frame.getComputedStyle(p).display!=='none','Shared LaTeX Suite preview visible');check(doc.querySelectorAll('.tikzcd-note-surface').length===1,'Only one diagram surface');}
+  check(!doc.querySelector('math-display > .tikzcd-note-surface'),'No editing preview');
   inject(`var inner=math._innerView;inner.dispatch(inner.state.tr.insertText('X',0+${source.indexOf('A')},${source.indexOf('A')+1}));inner.focus();`);
-  await waitFor(()=>doc.querySelector('.tikzcd-note-output')?.dataset.source?.includes('X \\arrow'),'Source edit refreshes diagram');
+  await Zotero.Promise.delay(300);
+  check(!doc.querySelector('.math-render .tikzcd-note-output')?.dataset.source?.includes('X \\arrow'),'Typing does not rerender');
+  if(CONFIG.withLatex){const p=doc.getElementById('latex-suite-math-preview');check(!p||frame.getComputedStyle(p).display==='none','No stale generic preview');}
   check(w.math._innerView.state.doc.textContent.includes('X \\arrow'),'Native source edit kept');
   // Record the editing view for visual inspection.
   const canvas=doc.createElement('canvas');canvas.width=frame.innerWidth;canvas.height=frame.innerHeight;
@@ -63,6 +65,7 @@ C \arrow[r,"k"'] & D
   // Close natively by moving the outer selection, then reopen the note.
   inject(`v.dispatch(v.state.tr.setSelection(S.fromJSON(v.state.doc,{type:'text',anchor:1,head:1})));v.focus();`);
   await waitFor(()=>!w.math._innerView&&doc.querySelector('.math-render .tikzcd-diagram'),'Closing preserves the rendered diagram');
+  await waitFor(()=>doc.querySelector('.math-render .tikzcd-note-output')?.dataset.source?.includes('X \\arrow'),'Closing renders changed source');
   // Switch the same live node to ordinary source, then restore it.
   inject(`math.update(math._node.type.create(null,sc.text('a+b')));`);
   check(!doc.querySelector('math-display').hasAttribute('data-tikzcd'),'Ordinary source removes diagram routing');

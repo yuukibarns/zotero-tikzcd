@@ -10,7 +10,7 @@ export function isTikzcd(source) {
  * or replaces source DOM; native open/close, selection, undo and saving remain
  * Zotero's responsibility. Private API checks fail closed on unknown versions.
  */
-export function installMathNodes(doc, { render = renderTikzcd, debounce = 120 } = {}) {
+export function installMathNodes(doc, { render = renderTikzcd } = {}) {
   const win = doc.defaultView;
   const states = new Map();
   let stopped = false;
@@ -23,7 +23,8 @@ math-display[data-tikzcd] > .math-render { cursor:pointer; }
 .tikzcd-note-output > .tikzcd-diagram { display:block; margin-inline:auto; }
 .tikzcd-note-status { display:block; text-align:left; font:12px/1.5 system-ui,sans-serif; padding:6px 10px; color:inherit; white-space:pre-wrap; }
 .tikzcd-note-status:empty { display:none; }
-#latex-suite-math-preview .tikzcd-note-surface { margin:0; overflow:visible; }
+/* Do not expose a stale clone through an optional generic equation preview. */
+math-display[data-tikzcd] #latex-suite-math-preview { display:none!important; }
 `;
   doc.head.append(style);
 
@@ -33,19 +34,6 @@ math-display[data-tikzcd] > .math-render { cursor:pointer; }
       !math._mathRenderElt || !math._mathSrcElt || !math._outerView ||
       !['renderMath','update','openEditor','closeEditor','destroy'].every(k => typeof math[k] === 'function')) return;
     let alive = true, surface = null, output = null, status = null;
-    let previewTarget = null;
-    function previewRequest(event) {
-      const detail = event.detail;
-      if (detail?.math !== math || !alive || !isTikzcd(source())) return;
-      previewTarget = detail.output; detail.handled = true; refresh();
-    }
-    function previewRelease(event) {
-      if (event.detail?.math !== math) return;
-      previewTarget = null;
-      if (alive && surface) mount();
-    }
-    doc.addEventListener('latex-suite-preview-request', previewRequest);
-    doc.addEventListener('latex-suite-preview-release', previewRelease);
     let timer = null, controller = null, current = null, requested = null, revision = 0;
     const hooks = [];
     const source = () => math._innerView?.state.doc.textContent ?? math._node.textContent;
@@ -72,21 +60,13 @@ math-display[data-tikzcd] > .math-render { cursor:pointer; }
         status = doc.createElement('div'); status.className = 'tikzcd-note-status';
         status.setAttribute('role', 'status');
         surface.append(output, status);
-        // A read-only preview must not move the source caret. Leave native
-        // scrollbars alone and let clicks on a CLOSED diagram open the node.
-        surface.addEventListener('mousedown', event => {
-          if (math._innerView && event.target.closest?.('.tikzcd-diagram')) {
-            event.preventDefault(); event.stopPropagation();
-          }
-        });
       }
-      const parent = math._innerView ? (previewTarget || node) : math._mathRenderElt;
+      const parent = math._mathRenderElt;
       if (surface.parentNode !== parent) {
-        if (parent === math._mathRenderElt) parent.replaceChildren(surface);
-        else parent.append(surface);
+        parent.replaceChildren(surface);
       }
     }
-    function refresh(immediate = false) {
+    function refresh() {
       if (!alive || stopped) return false;
       const text = source();
       if (!isTikzcd(text)) {
@@ -94,6 +74,12 @@ math-display[data-tikzcd] > .math-render { cursor:pointer; }
         clear();
         if (wasDiagram) originalRender.call(math);
         return false;
+      }
+      // Native editing hides the render element. Do not render hidden content
+      // or perform any work on source keystrokes; render after the editor closes.
+      if (math._innerView) {
+        if (timer !== null || controller) cancel();
+        return true;
       }
       mount();
       if (requested === text) return true;
@@ -117,7 +103,7 @@ math-display[data-tikzcd] > .math-render { cursor:pointer; }
             status.textContent = (current ? 'Showing previous diagram. ' : '') + `Cannot render: ${error.message}`;
           }
         } finally { if (controller === job) controller = null; }
-      }, immediate ? 0 : debounce);
+      }, 0);
       return true;
     }
     function hook(name, after) {
@@ -126,10 +112,10 @@ math-display[data-tikzcd] > .math-render { cursor:pointer; }
         // Other plugins use renderMath with a detached facade. Never attach
         // state or a Quiver render to those temporary objects.
         if (this !== math || !alive || stopped) return previous.apply(this, args);
-        if (name === 'renderMath' && refresh(!math._innerView)) return;
+        if (name === 'renderMath' && refresh()) return;
         if (name === 'destroy') release(false);
         const result = previous.apply(this, args);
-        if (after && alive) refresh(!math._innerView);
+        if (after && alive) refresh();
         return result;
       }
       math[name] = wrapped;
@@ -142,8 +128,6 @@ math-display[data-tikzcd] > .math-render { cursor:pointer; }
     function release(restoreNative) {
       if (!alive) return;
       alive = false;
-      doc.removeEventListener('latex-suite-preview-request', previewRequest);
-      doc.removeEventListener('latex-suite-preview-release', previewRelease);
       const wasDiagram = !!surface;
       clear();
       for (const unhook of hooks.reverse()) unhook();
@@ -156,7 +140,7 @@ math-display[data-tikzcd] > .math-render { cursor:pointer; }
     hook('closeEditor', true);
     hook('destroy', false);
     states.set(math, { node, release });
-    refresh(true);
+    refresh();
   }
   const scan = root => {
     if (root.nodeType !== 1 && root.nodeType !== 9) return;

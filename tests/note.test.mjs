@@ -32,11 +32,13 @@ test('recognises only standalone tikzcd starts', () => {
   assert.ok(isTikzcd('\\[\n'+source+'\\]'));
   assert.ok(!isTikzcd('x + '+source)); assert.ok(!isTikzcd('\\begin{matrix}a\\end{matrix}'));
 });
-test('closed render and editing preview reuse output without touching source', async () => {
+test('closed render stays in native render element; editing does not render', async () => {
   const x=setup();await pause();x.finish();await pause();
   assert.ok(x.math._mathRenderElt.querySelector('.tikzcd-diagram'));
   assert.equal(x.math._node.textContent,source);
-  x.math.openEditor();assert.equal(x.node.querySelector('.tikzcd-note-surface').parentNode,x.node);
+  x.math.openEditor();assert.equal(x.node.querySelector('.tikzcd-note-surface').parentNode,x.math._mathRenderElt);
+  x.math.update(source.replace('A','X'));await pause();assert.equal(x.jobs.length,1);
+  x.math.update(source);
   x.math.closeEditor();assert.equal(x.jobs.length,1);
   assert.equal(x.node.querySelector('.tikzcd-note-surface').parentNode,x.math._mathRenderElt);
   x.controller.dispose();assert.equal(x.node.getAttribute('data-tikzcd'),null);
@@ -72,7 +74,7 @@ test('destroy aborts render and removes retained state', async () => {
 });
 test('syntax errors retain the previous diagram with an explicit message', async () => {
   const x=setup();await pause();x.finish();await pause();
-  x.math.openEditor();x.math.update('\\begin{tikzcd} A');await pause();x.jobs.at(-1).reject(new Error('Missing end'));await pause();
+  x.math.openEditor();x.math.update('\\begin{tikzcd} A');x.math.closeEditor();await pause();x.jobs.at(-1).reject(new Error('Missing end'));await pause();
   assert.equal(x.node.querySelectorAll('.tikzcd-diagram').length,1);
   assert.match(x.node.querySelector('.tikzcd-note-status').textContent,/Showing previous diagram.*Missing end/);
   x.controller.dispose();x.dom.window.close();
