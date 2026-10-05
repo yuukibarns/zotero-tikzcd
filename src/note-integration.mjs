@@ -35,13 +35,19 @@ math-display[data-tikzcd] #latex-suite-math-preview { display:none!important; }
     request.css = rendererCSS;
     request.rendered = (async () => {
       const host = doc.createElement('div');
-      host.style.cssText = 'position:fixed;left:-100000px;top:0;visibility:hidden;font-size:11pt';
+      host.style.cssText = 'position:fixed;left:-100000px;top:0;visibility:hidden';
+      // Typography belongs to the exporter. Older exporters fall back to the
+      // source node's computed size, never a second hardcoded print size.
+      host.style.fontSize = request.fontSize || win.getComputedStyle(request.node).fontSize;
       doc.body.append(host);
       const controller = new win.AbortController(); exports.add(controller);
       let result;
       try {
         result = await render(host, text, { signal:controller.signal });
-        if (result.diagnostics.length) throw new Error(result.diagnostics.map(d=>d.message).join('\n'));
+        const errors = result.diagnostics.filter(d=>d.severity === 'error');
+        if (errors.length) throw new Error(errors.map(d=>d.message).join('\n'));
+        const warnings = result.diagnostics.filter(d=>d.severity !== 'error').map(d=>d.message);
+        if (Array.isArray(request.warnings)) request.warnings.push(...warnings);
         const copy = result.element.cloneNode(true);
         copy.style.display = 'block'; copy.style.marginInline = 'auto';
         return copy;
@@ -53,7 +59,8 @@ math-display[data-tikzcd] #latex-suite-math-preview { display:none!important; }
   function attach(node) {
     const math = node.pmViewDesc?.spec;
     if (!math || states.has(math) || math.dom !== node || node.localName !== 'math-display' ||
-      !math._mathRenderElt || !math._mathSrcElt || !math._outerView ||
+      math._mathRenderElt?.ownerDocument !== doc || math._mathSrcElt?.ownerDocument !== doc ||
+      typeof math._node?.textContent !== 'string' || !math._outerView ||
       !['renderMath','update','openEditor','closeEditor','destroy'].every(k => typeof math[k] === 'function')) return;
     let alive = true, surface = null, output = null, status = null;
     let timer = null, controller = null, current = null, requested = null, revision = 0;

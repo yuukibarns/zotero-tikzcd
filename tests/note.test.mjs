@@ -32,6 +32,30 @@ test('recognises only standalone tikzcd starts', () => {
   assert.ok(isTikzcd('\\[\n'+source+'\\]'));
   assert.ok(!isTikzcd('x + '+source)); assert.ok(!isTikzcd('\\begin{matrix}a\\end{matrix}'));
 });
+test('export uses requested typography and returns nonfatal warnings',async()=>{
+ const x=setup('a+b');
+ const request={node:x.node,math:{_node:{textContent:source}},fontSize:'18pt',warnings:[]};
+ x.doc.dispatchEvent(new x.dom.window.CustomEvent('latex-suite-export-math',{detail:request}));
+ const job=x.jobs.at(-1);assert.equal(job.host.style.fontSize,'18pt');
+ const element=x.doc.createElement('div');job.host.append(element);
+ job.resolve({element,diagnostics:[{severity:'warning',message:'Ignored spacing'}],dispose:()=>element.remove()});
+ assert.ok(await request.rendered);assert.deepEqual(request.warnings,['Ignored spacing']);
+ assert.ok(!job.host.isConnected);x.controller.dispose();x.dom.window.close();
+});
+test('export rejects fatal diagnostics and cleans staging content',async()=>{
+ const x=setup('a+b');const request={node:x.node,math:{_node:{textContent:source}},fontSize:'12pt',warnings:[]};
+ x.doc.dispatchEvent(new x.dom.window.CustomEvent('latex-suite-export-math',{detail:request}));
+ const job=x.jobs.at(-1),element=x.doc.createElement('div');
+ job.resolve({element,diagnostics:[{severity:'error',message:'Invalid diagram'}],dispose:()=>element.remove()});
+ await assert.rejects(request.rendered,/Invalid diagram/);assert.ok(!job.host.isConnected);
+ x.controller.dispose();x.dom.window.close();
+});
+test('unknown MathView shapes are left untouched',()=>{
+ const x=setup('a+b');x.controller.dispose();delete x.math._node;
+ const original=x.math.renderMath, controller=installMathNodes(x.doc);
+ assert.equal(controller.count,0);assert.equal(x.math.renderMath,original);
+ controller.dispose();x.dom.window.close();
+});
 test('closed render stays in native render element; editing does not render', async () => {
   const x=setup();await pause();x.finish();await pause();
   assert.ok(x.math._mathRenderElt.querySelector('.tikzcd-diagram'));
