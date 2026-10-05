@@ -10,4 +10,4 @@ await build({ entryPoints: ['src/note-integration.mjs'], outfile: 'build/note-in
 for (const name of ['manifest.json','bootstrap.js']) await cp(name, `dist/${name}`);
 await cp('vendor/quiver/LICENSE', 'dist/content/QUIVER-LICENSE.txt');
 await cp('node_modules/katex/LICENSE', 'dist/content/KATEX-LICENSE.txt');
-console.log('Built offline TikZ-CD prototype.');
+console.log('Built offline TikZ-CD renderer.');

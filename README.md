@@ -1,12 +1,12 @@
 # TikZ-CD renderer for Zotero
 
 An independent, offline Zotero 10 plugin that renders Quiver-compatible `tikzcd`
-diagrams in **closed display-math nodes**. Experimental: this uses Zotero's
+diagrams in **closed display-math nodes**, with optional live preview. This uses Zotero's
 private MathView API, with checks for the expected interface.
 
 ## Usage
 
-Install `tikzcd-preview-0.2.12.xpi`, then paste a complete block into a display-math
+Install `tikzcd-preview-0.2.14.xpi`, then paste a complete block into a display-math
 node in a note:
 
 ```latex
