@@ -42,7 +42,7 @@ C \arrow[r,"k"'] & D
   const scale=new frame.DOMMatrix(frame.getComputedStyle(graph).transform).a;
   check(Math.abs(scale*26-parseFloat(frame.getComputedStyle(surface).fontSize))<0.001,'Whole diagram matches note font size');
   check(frame.getComputedStyle(surface).marginTop==='0px','No extra outer margin');
-  const bounds=[...diagramRoot.querySelectorAll('.label, .arrow > svg:not(.arrow-background)')].map(n=>n.getBoundingClientRect()).filter(r=>r.width||r.height);
+  const bounds=[...diagramRoot.querySelectorAll('.label, .arrow > svg path, .arrow > svg circle, .arrow > svg polygon, .arrow > svg line')].filter(n=>!n.closest('defs, mask, clipPath, .arrow-background, .arrow-endpoint, .invalid')).map(n=>n.getBoundingClientRect()).filter(r=>r.width||r.height);
   check(Math.abs(Math.min(...bounds.map(r=>r.left))-dr.left)<1,'No left padding');
   check(Math.abs(Math.min(...bounds.map(r=>r.top))-dr.top)<1,'No top padding');
   check(Math.abs(dr.right-Math.max(...bounds.map(r=>r.right)))<1,'No right padding');
@@ -68,6 +68,14 @@ C \arrow[r,"k"'] & D
   check(!doc.querySelector('.math-render .tikzcd-note-output')?.dataset.source?.includes('X \\arrow'),'Typing does not rerender');
   if(CONFIG.withLatex){const p=doc.getElementById('latex-suite-math-preview');check(!p||frame.getComputedStyle(p).display==='none','No stale generic preview');}
   check(w.math._innerView.state.doc.textContent.includes('X \\arrow'),'Native source edit kept');
+  if(CONFIG.withLatex){
+    inject(`window.__latexSuiteDiagnosePrint=html=>window.exportedHTML=html;document.getElementById('latex-suite-print-menu-item').click();`);
+    await waitFor(()=>!!w.exportedHTML,'PDF snapshot prepared while source is open');
+    check(w.exportedHTML.includes('tikzcd-graph'),'PDF includes diagram');
+    check(w.exportedHTML.includes('clipping-mask'),'PDF preserves SVG masks');
+    check(w.exportedHTML.includes('.tikzcd-diagram {'),'PDF includes renderer CSS');
+    await IOUtils.writeUTF8(CONFIG.screenshot+'.html',w.exportedHTML);
+  }
   // Record the editing view for visual inspection.
   const canvas=doc.createElement('canvas');canvas.width=frame.innerWidth;canvas.height=frame.innerHeight;
   canvas.getContext('2d').drawWindow(frame,0,0,canvas.width,canvas.height,'white');

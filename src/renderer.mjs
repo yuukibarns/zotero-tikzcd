@@ -92,7 +92,10 @@ export async function renderTikzcd(container, source, { signal } = {}) {
     ui.layout();
     parser.post_layout();
     ui.quiver.rerender(ui);
-    const measurable = graph.querySelectorAll('.label, .arrow > svg:not(.arrow-background)');
+    // SVG canvases include large rotation/curve safety boxes. Measure painted
+    // geometry instead, excluding mask/clip definitions and hidden hit targets.
+    const measurable = [...graph.querySelectorAll('.label, .arrow > svg path, .arrow > svg circle, .arrow > svg polygon, .arrow > svg line')]
+      .filter(n => !n.closest('defs, mask, clipPath, .arrow-background, .arrow-endpoint, .invalid'));
     const origin = graph.getBoundingClientRect();
     const rects = [...measurable].map(n => n.getBoundingClientRect()).filter(r => r.width || r.height);
     // Fit actual content, not the grid origin (which adds an empty half-cell).

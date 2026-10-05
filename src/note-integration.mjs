@@ -27,6 +27,28 @@ math-display[data-tikzcd] > .math-render { cursor:pointer; }
 math-display[data-tikzcd] #latex-suite-math-preview { display:none!important; }
 `;
   doc.head.append(style);
+  const exports = new Set();
+  function exportMath(event) {
+    const request = event.detail;
+    const text = request?.math?._innerView?.state.doc.textContent ?? request?.math?._node?.textContent;
+    if (stopped || request?.node?.localName !== 'math-display' || typeof text !== 'string' || !isTikzcd(text)) return;
+    request.css = rendererCSS;
+    request.rendered = (async () => {
+      const host = doc.createElement('div');
+      host.style.cssText = 'position:fixed;left:-100000px;top:0;visibility:hidden;font-size:11pt';
+      doc.body.append(host);
+      const controller = new win.AbortController(); exports.add(controller);
+      let result;
+      try {
+        result = await render(host, text, { signal:controller.signal });
+        if (result.diagnostics.length) throw new Error(result.diagnostics.map(d=>d.message).join('\n'));
+        const copy = result.element.cloneNode(true);
+        copy.style.display = 'block'; copy.style.marginInline = 'auto';
+        return copy;
+      } finally { result?.dispose(); host.remove(); exports.delete(controller); }
+    })();
+  }
+  doc.addEventListener('latex-suite-export-math', exportMath);
 
   function attach(node) {
     const math = node.pmViewDesc?.spec;
@@ -159,6 +181,8 @@ math-display[data-tikzcd] #latex-suite-math-preview { display:none!important; }
   function dispose() {
     if (stopped) return;
     stopped = true; observer.disconnect();
+    doc.removeEventListener('latex-suite-export-math', exportMath);
+    for (const controller of exports) controller.abort();
     for (const state of [...states.values()]) state.release(true);
     style.remove(); win.removeEventListener('unload', dispose);
   }
