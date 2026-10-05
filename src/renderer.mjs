@@ -38,7 +38,7 @@ class Layout extends UI {
   }
   layout() {
     const cells = this.quiver.all_cells();
-    // Preserve Quiver's minimum cell size and half-cell outer margin policy.
+    // Preserve Quiver's minimum spacing between cells.
     for (const cell of cells.filter(c => c.is_vertex())) {
       const label = cell.element.query_selector('.label').element;
       this.cell_width.set(cell.position.x, Math.max(this.cell_size(this.cell_width, cell.position.x), label.offsetWidth + 64));
@@ -100,10 +100,9 @@ export async function renderTikzcd(container, source, { signal } = {}) {
     const top = rects.length ? Math.min(...rects.map(r => r.top - origin.top)) : 0;
     const right = rects.length ? Math.max(...rects.map(r => r.right - origin.left)) : 0;
     const bottom = rects.length ? Math.max(...rects.map(r => r.bottom - origin.top)) : 0;
-    const padding = 6; // Room for SVG strokes and antialiasing at the edges.
-    const width = Math.ceil(right - left + 2 * padding), height = Math.ceil(bottom - top + 2 * padding);
+    const width = Math.ceil(right - left), height = Math.ceil(bottom - top);
     if (width > 16000 || height > 16000) throw new Error('Diagram dimensions exceed 16,000 pixels.');
-    graph.style.transform = `translate(${padding - left}px, ${padding - top}px)`;
+    graph.style.transform = `translate(${-left}px, ${-top}px)`;
     root.style.width = `${width}px`; root.style.height = `${height}px`;
     root.style.visibility = '';
     const diagnostics = [...ui.diagnostics, ...parser.diagnostics.map(d => ({

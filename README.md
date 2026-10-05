@@ -6,7 +6,7 @@ private MathView API, with checks for the expected interface.
 
 ## Usage
 
-Install `tikzcd-preview-0.2.4.xpi`, then paste a complete block into a display-math
+Install `tikzcd-preview-0.2.5.xpi`, then paste a complete block into a display-math
 node in a note:
 
 ```latex
@@ -33,7 +33,7 @@ For visual editing, use [Quiver](https://q.uiver.app/).
   `2f289ecbae9b7e5a473e04b924750c538ed5c4cf`. MIT sources: `vendor/quiver`.
 - KaTeX renders labels. Zotero supplies existing note styles and fonts.
 - Labels use Quiver's 26px sizing to match its fixed grid geometry; content
-  bounds have only 6px padding, without an extra grid-origin margin.
+  bounds have no added padding or outer vertical margin.
 - Per-node hooks preserve native editing, undo and saving. Async rendering is
   cancelled on editing, replacement, removal or shutdown.
 - Transparent backgrounds/default colors inherit the note theme. Explicit

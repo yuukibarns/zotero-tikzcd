@@ -19,9 +19,9 @@ export function installMathNodes(doc, { render = renderTikzcd } = {}) {
   style.textContent = rendererCSS + `
 math-display[data-tikzcd] > .math-render { cursor:pointer; }
 .tikzcd-note-surface { display:block; width:100%; overflow:auto; text-align:center; background:transparent; color:inherit; margin:0; }
-.tikzcd-note-output { display:block; min-height:36px; }
+.tikzcd-note-output { display:block; margin:0; padding:0; }
 .tikzcd-note-output > .tikzcd-diagram { display:block; margin-inline:auto; }
-.tikzcd-note-status { display:block; text-align:left; font:12px/1.5 system-ui,sans-serif; padding:6px 10px; color:inherit; white-space:pre-wrap; }
+.tikzcd-note-status { display:block; text-align:left; font:12px/1.5 system-ui,sans-serif; padding:0; margin:0; color:inherit; white-space:pre-wrap; }
 .tikzcd-note-status:empty { display:none; }
 /* Do not expose a stale clone through an optional generic equation preview. */
 math-display[data-tikzcd] #latex-suite-math-preview { display:none!important; }

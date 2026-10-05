@@ -40,8 +40,10 @@ C \arrow[r,"k"'] & D
   check(frame.getComputedStyle(diagramRoot.querySelector('.label')).fontSize==='26px','Quiver label sizing');
   check(frame.getComputedStyle(surface).marginTop==='0px','No extra outer margin');
   const bounds=[...diagramRoot.querySelectorAll('.label, .arrow > svg:not(.arrow-background)')].map(n=>n.getBoundingClientRect()).filter(r=>r.width||r.height);
-  check(Math.abs(Math.min(...bounds.map(r=>r.left))-dr.left-6)<1,'Tight left content bounds');
-  check(Math.abs(Math.min(...bounds.map(r=>r.top))-dr.top-6)<1,'Tight top content bounds');
+  check(Math.abs(Math.min(...bounds.map(r=>r.left))-dr.left)<1,'No left padding');
+  check(Math.abs(Math.min(...bounds.map(r=>r.top))-dr.top)<1,'No top padding');
+  check(Math.abs(dr.right-Math.max(...bounds.map(r=>r.right)))<1,'No right padding');
+  check(Math.abs(dr.bottom-Math.max(...bounds.map(r=>r.bottom)))<1,'No bottom padding');
   const mathNode=doc.querySelector('math-display');
   for(const color of ['rgb(230, 230, 230)','rgb(25, 25, 25)']){
     mathNode.style.color=color;
