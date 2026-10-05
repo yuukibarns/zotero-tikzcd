@@ -7,7 +7,7 @@ LaTeX Suite is unchanged and neither KaTeX nor Zotero needs to be patched.
 
 ## Try it
 
-Install `tikzcd-preview-0.2.1.xpi` using Zotero's Plugins window, then choose
+Install `tikzcd-preview-0.2.2.xpi` using Zotero's Plugins window, then choose
 **Tools → TikZ-CD Preview…**. Paste a complete `tikzcd` block and click Render
 (or Ctrl+Enter / Cmd+Enter). Rendering is explicit, not performed on every key.
 
@@ -22,7 +22,10 @@ Alternatively, paste the block above into a **display math node** in a note.
 Closed nodes show the diagram; clicking opens Zotero's normal source editor,
 with a live diagram preview below it. Changes are debounced by 120 ms, and stale
 renders are discarded. Ordinary equations and inline math still use native KaTeX.
-LaTeX Suite's duplicate equation preview is hidden for diagram nodes only.
+With LaTeX Suite 0.5.3.99, diagrams reuse its actual equation preview panel:
+TikZ-CD supplies live content through a preview request/release event contract,
+while LaTeX Suite owns the panel and protects source focus during interaction.
+Without LaTeX Suite, the independent plugin retains its standalone editing view.
 
 The note retains its original editable LaTeX source, not a generated image.
 There is no insertion command, image/PDF export, or portable image fallback yet:
