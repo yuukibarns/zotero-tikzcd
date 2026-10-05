@@ -132,7 +132,7 @@ math-display[data-tikzcd] #latex-suite-math-preview:not([data-external-renderer]
       if (requested === text) return true;
       cancel(); requested = text;
       const ticket = revision;
-      status.textContent = current ? 'Updating diagram…' : 'Rendering diagram…';
+      status.textContent = '';
       timer = win.setTimeout(async () => {
         timer = null;
         if (!alive || stopped || !node.isConnected || ticket !== revision) return;

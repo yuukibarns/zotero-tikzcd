@@ -81,6 +81,29 @@ test('shared preview reuses output, renders edits and releases without extra pan
  x.math.update(source.replace('A','Y'));await pause();assert.equal(x.jobs.length,2,'released preview does not render');
  x.controller.dispose();x.dom.window.close();
 });
+test('preview edits debounce silently and release cancels pending work',async()=>{
+ const x=setup();await pause();x.finish();await pause();x.math.openEditor();
+ const host=x.doc.createElement('div');x.node.append(host);
+ const pending=new Map();let id=0;
+ x.dom.window.setTimeout=(fn,delay)=>{pending.set(++id,{fn,delay});return id;};
+ x.dom.window.clearTimeout=key=>pending.delete(key);
+ const send=()=>x.doc.dispatchEvent(new x.dom.window.CustomEvent('latex-suite-preview-request',{
+   detail:{math:x.math,output:host,debounceMs:250,handled:false}
+ }));
+ send();
+ for(const label of ['X','Y','Z']){x.math.update(source.replace('A',label));send();}
+ assert.equal(x.jobs.length,1);assert.equal(pending.size,1);
+ assert.equal(host.querySelector('.tikzcd-note-status').textContent,'');
+ assert.ok(host.querySelector('.tikzcd-diagram'),'previous diagram remains visible');
+ const [key,timer]=[...pending][0];assert.equal(timer.delay,250);
+ send();assert.equal([...pending][0][0],key,'caret refresh does not restart debounce');
+ pending.delete(key);timer.fn();assert.equal(x.jobs.length,2);
+ assert.equal(x.jobs[1].text,source.replace('A','Z'));x.finish();await pause();
+ x.math.update(source.replace('A','W'));send();assert.equal(pending.size,1);
+ x.doc.dispatchEvent(new x.dom.window.CustomEvent('latex-suite-preview-release',{detail:{math:x.math}}));
+ assert.equal(pending.size,0);assert.equal(x.jobs.length,2);
+ x.controller.dispose();x.dom.window.close();
+});
 test('late async completion cannot overwrite a newer source', async () => {
   const x=setup();await pause();const first=x.jobs[0];
   x.math.update(source.replace('A','X'));await pause();

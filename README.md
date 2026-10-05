@@ -6,7 +6,7 @@ private MathView API, with checks for the expected interface.
 
 ## Usage
 
-Install `tikzcd-preview-0.2.11.xpi`, then paste a complete block into a display-math
+Install `tikzcd-preview-0.2.12.xpi`, then paste a complete block into a display-math
 node in a note:
 
 ```latex
@@ -19,6 +19,7 @@ C \arrow[r, "k"'] & D
 Leave the source editor to render. With LaTeX Suite 0.5.3.103, editing also uses
 its existing live preview panel and display-preview enable/delay settings.
 The same diagram surface is reused; caret-only movement does not rerender it.
+Updates remain silent while debouncing and rendering; only diagnostics are shown.
 Without LaTeX Suite, rendering remains closed-node only. Ordinary equations
 retain native rendering. There is no Tools-menu button or standalone window.
 
