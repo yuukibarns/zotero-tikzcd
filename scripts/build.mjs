@@ -5,6 +5,8 @@ await extract();
 await mkdir('dist/content', { recursive: true });
 await build({ entryPoints: ['src/app.mjs'], outfile: 'dist/content/app.js', bundle: true, format: 'iife', target: 'firefox128' });
 await build({ entryPoints: ['src/renderer.mjs'], outfile: 'build/renderer.mjs', bundle: true, format: 'esm', target: 'firefox128' });
+await build({ entryPoints: ['src/note-entry.mjs'], outfile: 'dist/content/note.js', bundle: true, format: 'iife', target: 'firefox128', loader: { '.css':'text' } });
+await build({ entryPoints: ['src/note-integration.mjs'], outfile: 'build/note-integration.mjs', bundle: true, format: 'esm', target: 'firefox128', loader: { '.css':'text' } });
 for (const name of ['index.html','app.css','renderer.css']) await cp(`src/${name}`, `dist/content/${name}`);
 await cp('node_modules/katex/dist/katex.min.css', 'dist/content/katex.min.css');
 await cp('node_modules/katex/dist/fonts', 'dist/content/fonts', { recursive: true });

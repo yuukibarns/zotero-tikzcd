@@ -1,11 +1,11 @@
 {
   "name": "zotero-tikzcd",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "type": "module",
   "scripts": {
     "build": "node scripts/build.mjs",
-    "test": "node --test tests/renderer.test.mjs",
+    "test": "node --test tests/renderer.test.mjs tests/note.test.mjs",
     "test:native": "node tests/native.mjs",
     "package": "python3 scripts/package.py"
   },
