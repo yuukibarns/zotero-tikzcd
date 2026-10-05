@@ -77,3 +77,10 @@ installed Zotero in an isolated temporary profile (not your library), verifies
 real geometry and plugin lifecycle, and writes `build/native-preview.png`.
 
 Builds are committed locally; pushing/publishing is a separate explicit step.
+
+Validated on Zotero 10.0.5 (Linux): 32 automated tests, including 24 upstream
+valid parser fixtures; native rendering of the example, curved parallel arrows,
+loops, hook/epimorphism arrows and fraction/integral labels; repeated-render,
+error and disable cleanup. Four small native fixtures took 6–30 ms on this
+machine with fonts already loaded; this is not a general performance guarantee.
+Other OS versions have not been tested.
