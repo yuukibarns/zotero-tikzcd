@@ -78,6 +78,7 @@ math-display[data-tikzcd] #latex-suite-math-preview { display:none!important; }
       // Native editing hides the render element. Do not render hidden content
       // or perform any work on source keystrokes; render after the editor closes.
       if (math._innerView) {
+        node.setAttribute('data-tikzcd', '');
         if (timer !== null || controller) cancel();
         return true;
       }
