@@ -7,7 +7,7 @@ LaTeX Suite is unchanged and neither KaTeX nor Zotero needs to be patched.
 
 ## Try it
 
-Install `tikzcd-preview-0.2.0.xpi` using Zotero's Plugins window, then choose
+Install `tikzcd-preview-0.2.1.xpi` using Zotero's Plugins window, then choose
 **Tools → TikZ-CD Preview…**. Paste a complete `tikzcd` block and click Render
 (or Ctrl+Enter / Cmd+Enter). Rendering is explicit, not performed on every key.
 
@@ -67,8 +67,10 @@ limits. Source is capped at 20,000 characters, 200 cells and bounded coordinates
 These are resource safeguards, not a claim of resistance to every adversarial
 input. Rendering runs in a browser document and requires real font/layout metrics.
 
-For now diagrams use a white background with dark labels, including in dark
-Zotero themes. The editor UI follows the system theme.
+Note diagrams use a transparent background, centered layout and inherited note
+font size and foreground color. Default arrows and labels follow theme changes
+without rerendering; explicit non-black Quiver colors are preserved (Quiver treats
+black as its theme-adaptive default).
 
 Zotero requires an `update_url` even for local prototypes. This build uses the
 reserved `example.invalid` domain; **automatic updates are unavailable** until

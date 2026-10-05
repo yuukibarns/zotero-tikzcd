@@ -18,9 +18,10 @@ export function installMathNodes(doc, { render = renderTikzcd, debounce = 120 } 
   style.dataset.tikzcdStyle = '';
   style.textContent = rendererCSS + `
 math-display[data-tikzcd] > .math-render { cursor:pointer; }
-.tikzcd-note-surface { display:block; width:100%; overflow:auto; text-align:center; background:white; color:#171717; border:1px solid #8885; border-radius:4px; margin-top:8px; }
-.tikzcd-note-output { display:block; min-height:36px; text-align:left; }
-.tikzcd-note-status { display:block; text-align:left; font:12px/1.5 system-ui,sans-serif; padding:6px 10px; color:#7c3310; white-space:pre-wrap; }
+.tikzcd-note-surface { display:block; width:100%; overflow:auto; text-align:center; background:transparent; color:inherit; margin:1em 0; }
+.tikzcd-note-output { display:block; min-height:36px; }
+.tikzcd-note-output > .tikzcd-diagram { display:block; margin-inline:auto; }
+.tikzcd-note-status { display:block; text-align:left; font:12px/1.5 system-ui,sans-serif; padding:6px 10px; color:inherit; white-space:pre-wrap; }
 .tikzcd-note-status:empty { display:none; }
 /* LaTeX Suite's KaTeX source map and caret marker do not describe diagrams.
    Its equation preview is hidden only in a node owned by this renderer. */

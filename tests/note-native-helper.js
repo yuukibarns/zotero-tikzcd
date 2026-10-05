@@ -30,6 +30,19 @@ C \arrow[r,"k"'] & D
   check(doc.querySelectorAll('math-display .tikzcd-diagram .vertex').length===4,'Four diagram vertices');
   check(doc.querySelectorAll('math-display')[1].querySelector('.katex'),'Ordinary display math unchanged');
   check(doc.querySelector('math-inline .katex'),'Inline math unchanged');
+  const surface=doc.querySelector('.tikzcd-note-surface'), diagramRoot=surface.querySelector('.tikzcd-diagram');
+  check(frame.getComputedStyle(surface).backgroundColor==='rgba(0, 0, 0, 0)','Transparent surface');
+  check(frame.getComputedStyle(diagramRoot).backgroundColor==='rgba(0, 0, 0, 0)','Transparent diagram');
+  check(frame.getComputedStyle(surface).borderTopWidth==='0px','No preview panel border');
+  const dr=diagramRoot.getBoundingClientRect(), sr=surface.getBoundingClientRect();
+  check(Math.abs((dr.left+dr.right)-(sr.left+sr.right))<2,'Diagram centered');
+  const mathNode=doc.querySelector('math-display');
+  for(const color of ['rgb(230, 230, 230)','rgb(25, 25, 25)']){
+    mathNode.style.color=color;
+    check(frame.getComputedStyle(diagramRoot.querySelector('.vertex .label')).color===color,'Labels inherit live theme color');
+    check(frame.getComputedStyle(diagramRoot.querySelector('.arrow')).color===color,'Arrows inherit live theme color');
+  }
+  mathNode.style.removeProperty('color');
   inject('window.savedAfter=JSON.stringify(v.state.doc.toJSON());window.serialized=JSON.stringify(getDataSync());');
   check(w.savedBefore===w.savedAfter,'Rendering did not change note document');
   check(!w.serialized.includes('tikzcd-note-surface')&&!w.serialized.includes('tikzcd-diagram'),'Generated diagram is not serialized into source');
