@@ -7,8 +7,10 @@ async function run(){
   await Zotero.initializationPromise;await Zotero.uiReadyPromise;
   await IOUtils.writeUTF8(CONFIG.result,JSON.stringify({stage:'opening note'}));
   const check=(v,m)=>{if(!v)throw new Error(m);};
+  // Wait before saving a fixture while the fresh profile is still loading items.
+  await Zotero.Libraries.get(Zotero.Libraries.userLibraryID).waitForDataLoad('item');
   const item=new Zotero.Item('note');item.setNote('<div data-schema-version="9"><p>test</p></div>');await item.saveTx();
-  const instance=await Zotero.Notes.open(item.id,undefined,{openInWindow:true});
+  const instance=await Zotero.Notes.open(item.id,undefined,{openInWindow:CONFIG.withLatex});
   await IOUtils.writeUTF8(CONFIG.result,JSON.stringify({stage:'note opened'}));
   const frame=instance._iframeWindow,w=frame.wrappedJSObject;
   frame.docShell.chromeEventHandler.ownerGlobal.resizeTo(1100,850);
