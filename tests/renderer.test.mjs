@@ -60,3 +60,13 @@ test('bundle has no upstream application startup, CDN loading or global pointer 
   const source = await readFile(new URL('../build/renderer.mjs', import.meta.url), 'utf8');
   for (const forbidden of ['cdn.jsdelivr.net','DOMContentLoaded','active_thumb','class Toolbar','class Shortcuts','localStorage']) assert.ok(!source.includes(forbidden), forbidden);
 });
+const fixtures = await readFile(new URL('../vendor/quiver/parser-fixtures.tex', import.meta.url), 'utf8');
+const validFixtures = fixtures.split('%%% Invalid diagrams %%%')[0].match(/\\begin\{tikzcd\}[\s\S]*?\\end\{tikzcd\}/g);
+for (const [index, source] of validFixtures.entries()) {
+  test(`upstream valid parser fixture ${index + 1}`, async () => {
+    const result = await renderTikzcd(host, source);
+    assert.ok(result.vertices > 0);
+    assert.ok(!/NaN|Infinity/.test(result.element.innerHTML));
+    result.dispose(); assert.equal(host.children.length, 0);
+  });
+}

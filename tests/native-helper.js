@@ -31,7 +31,7 @@ async function run() {
   await IOUtils.write(CONFIG.screenshot, bytes);
   const tests = [
     String.raw`\begin{tikzcd} A \arrow[r,bend left,"f"] \arrow[r,bend right,"g"'] & B \end{tikzcd}`,
-    String.raw`\begin{tikzcd} A \arrow[loop above,"f"] \end{tikzcd}`,
+    String.raw`\begin{tikzcd} A \arrow[loop,in=55,out=125,"f"] \end{tikzcd}`,
     String.raw`\begin{tikzcd} A \arrow[r,hook] & B \arrow[r,two heads] & C \end{tikzcd}`,
     String.raw`\begin{tikzcd} {\frac{\mathbb{E}[X]}{\sum_{i=1}^n x_i}} \arrow[r,"\alpha"] & {\int_0^1 f(x)\,dx} \end{tikzcd}`,
   ];
@@ -56,6 +56,7 @@ async function run() {
   const {AddonManager}=ChromeUtils.importESModule('resource://gre/modules/AddonManager.sys.mjs');
   await (await AddonManager.getAddonByID('tikzcd-preview@yuukibarns')).disable();
   check(!doc.getElementById('tikzcd-preview-open'),'Disable removes menu');
+  for(let i=0;i<20&&!win.closed;i++) await Zotero.Promise.delay(50);
   check(win.closed,'Disable closes preview');
   await IOUtils.writeUTF8(CONFIG.result,JSON.stringify({done:true,passed:true,zotero:Zotero.version,samples,screenshot:CONFIG.screenshot}));
 }

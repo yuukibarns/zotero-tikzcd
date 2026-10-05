@@ -15,7 +15,10 @@ function attach(win) {
   function open() {
     const preview = win.openDialog('chrome://tikzcd-preview/content/index.html', '', 'chrome,centerscreen,resizable,width=1100,height=720');
     previews.add(preview);
-    preview.addEventListener('unload', () => previews.delete(preview), { once: true });
+    // openDialog can first unload about:blank. Only unregister the real page.
+    preview.addEventListener('unload', event => {
+      if (event.target.documentURI === 'chrome://tikzcd-preview/content/index.html') previews.delete(preview);
+    });
   }
   function cleanup() {
     item.removeEventListener('command', open); item.remove();
