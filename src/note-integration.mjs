@@ -24,7 +24,7 @@ math-display[data-tikzcd] > .math-render { cursor:pointer; }
 .tikzcd-note-status { display:block; text-align:left; font:12px/1.5 system-ui,sans-serif; padding:0; margin:0; color:inherit; white-space:pre-wrap; }
 .tikzcd-note-status:empty { display:none; }
 /* Do not expose a stale clone through an optional generic equation preview. */
-math-display[data-tikzcd] #latex-suite-math-preview { display:none!important; }
+math-display[data-tikzcd] #latex-suite-math-preview:not([data-external-renderer]) { display:none!important; }
 `;
   doc.head.append(style);
   const exports = new Set();
@@ -55,6 +55,10 @@ math-display[data-tikzcd] #latex-suite-math-preview { display:none!important; }
     })();
   }
   doc.addEventListener('latex-suite-export-math', exportMath);
+  const previewRequest = event => states.get(event.detail?.math)?.preview(event.detail);
+  const previewRelease = event => states.get(event.detail?.math)?.closePreview();
+  doc.addEventListener('latex-suite-preview-request', previewRequest);
+  doc.addEventListener('latex-suite-preview-release', previewRelease);
 
   function attach(node) {
     const math = node.pmViewDesc?.spec;
@@ -63,6 +67,18 @@ math-display[data-tikzcd] #latex-suite-math-preview { display:none!important; }
       typeof math._node?.textContent !== 'string' || !math._outerView ||
       !['renderMath','update','openEditor','closeEditor','destroy'].every(k => typeof math[k] === 'function')) return;
     let alive = true, surface = null, output = null, status = null;
+    let previewTarget = null, previewDelay = 100;
+    function preview(request) {
+      if (!alive || !math._innerView || !isTikzcd(source())) return;
+      request.handled = true;
+      previewTarget = request.output;
+      previewDelay = Number.isFinite(request.debounceMs) ? Math.max(0, Math.min(2000, request.debounceMs)) : 100;
+      refresh(true);
+    }
+    function closePreview() {
+      previewTarget = null; cancel();
+      if (surface) mount();
+    }
     let timer = null, controller = null, current = null, requested = null, revision = 0;
     const hooks = [];
     const source = () => math._innerView?.state.doc.textContent ?? math._node.textContent;
@@ -90,12 +106,12 @@ math-display[data-tikzcd] #latex-suite-math-preview { display:none!important; }
         status.setAttribute('role', 'status');
         surface.append(output, status);
       }
-      const parent = math._mathRenderElt;
+      const parent = math._innerView && previewTarget ? previewTarget : math._mathRenderElt;
       if (surface.parentNode !== parent) {
         parent.replaceChildren(surface);
       }
     }
-    function refresh() {
+    function refresh(fromPreview = false) {
       if (!alive || stopped) return false;
       const text = source();
       if (!isTikzcd(text)) {
@@ -104,11 +120,11 @@ math-display[data-tikzcd] #latex-suite-math-preview { display:none!important; }
         if (wasDiagram) originalRender.call(math);
         return false;
       }
-      // Native editing hides the render element. Do not render hidden content
-      // or perform any work on source keystrokes; render after the editor closes.
-      if (math._innerView) {
+      // While editing, only the shared preview may request rendering. This
+      // preserves its enabled/disabled, debounce and IME behavior.
+      if (math._innerView && (!previewTarget || !fromPreview)) {
         node.setAttribute('data-tikzcd', '');
-        if (timer !== null || controller) cancel();
+        if (!previewTarget && (timer !== null || controller)) cancel();
         return true;
       }
       mount();
@@ -133,7 +149,7 @@ math-display[data-tikzcd] #latex-suite-math-preview { display:none!important; }
             status.textContent = (current ? 'Showing previous diagram. ' : '') + `Cannot render: ${error.message}`;
           }
         } finally { if (controller === job) controller = null; }
-      }, 0);
+      }, math._innerView ? previewDelay : 0);
       return true;
     }
     function hook(name, after) {
@@ -169,7 +185,7 @@ math-display[data-tikzcd] #latex-suite-math-preview { display:none!important; }
     hook('openEditor', true);
     hook('closeEditor', true);
     hook('destroy', false);
-    states.set(math, { node, release });
+    states.set(math, { node, release, preview, closePreview });
     refresh();
   }
   const scan = root => {
@@ -189,6 +205,8 @@ math-display[data-tikzcd] #latex-suite-math-preview { display:none!important; }
     if (stopped) return;
     stopped = true; observer.disconnect();
     doc.removeEventListener('latex-suite-export-math', exportMath);
+    doc.removeEventListener('latex-suite-preview-request', previewRequest);
+    doc.removeEventListener('latex-suite-preview-release', previewRelease);
     for (const controller of exports) controller.abort();
     for (const state of [...states.values()]) state.release(true);
     style.remove(); win.removeEventListener('unload', dispose);

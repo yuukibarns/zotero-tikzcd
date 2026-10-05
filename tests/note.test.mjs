@@ -68,6 +68,19 @@ test('closed render stays in native render element; editing does not render', as
   x.controller.dispose();assert.equal(x.node.getAttribute('data-tikzcd'),null);
   assert.equal(x.math._mathRenderElt.textContent,'native:'+source);x.dom.window.close();
 });
+test('shared preview reuses output, renders edits and releases without extra panel',async()=>{
+ const x=setup();await pause();x.finish();await pause();x.math.openEditor();
+ const host=x.doc.createElement('div');x.node.append(host);
+ const request={math:x.math,output:host,debounceMs:0,handled:false};
+ const send=()=>x.doc.dispatchEvent(new x.dom.window.CustomEvent('latex-suite-preview-request',{detail:request}));
+ send();assert.ok(request.handled);assert.ok(host.querySelector('.tikzcd-diagram'));assert.equal(x.jobs.length,1);
+ x.math.update(source.replace('A','X'));send();await pause();assert.equal(x.jobs.length,2);x.finish();await pause();
+ send();await pause();assert.equal(x.jobs.length,2,'caret-only refresh does not render');
+ x.doc.dispatchEvent(new x.dom.window.CustomEvent('latex-suite-preview-release',{detail:{math:x.math}}));
+ assert.ok(!host.querySelector('.tikzcd-diagram'));assert.ok(x.math._mathRenderElt.querySelector('.tikzcd-diagram'));
+ x.math.update(source.replace('A','Y'));await pause();assert.equal(x.jobs.length,2,'released preview does not render');
+ x.controller.dispose();x.dom.window.close();
+});
 test('late async completion cannot overwrite a newer source', async () => {
   const x=setup();await pause();const first=x.jobs[0];
   x.math.update(source.replace('A','X'));await pause();
