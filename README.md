@@ -6,7 +6,7 @@ private MathView API, with checks for the expected interface.
 
 ## Usage
 
-Install `tikzcd-preview-0.2.10.xpi`, then paste a complete block into a display-math
+Install `tikzcd-preview-0.2.11.xpi`, then paste a complete block into a display-math
 node in a note:
 
 ```latex
@@ -16,11 +16,11 @@ C \arrow[r, "k"'] & D
 \end{tikzcd}
 ```
 
-Leave the source editor to render. Opening it shows the native source editor,
-without a live diagram preview. Ordinary equations retain native rendering.
-There is no Tools-menu button or standalone preview window. No LaTeX Suite
-update is required; its optional generic preview is hidden for diagram nodes
-to avoid displaying stale content.
+Leave the source editor to render. With LaTeX Suite 0.5.3.103, editing also uses
+its existing live preview panel and display-preview enable/delay settings.
+The same diagram surface is reused; caret-only movement does not rerender it.
+Without LaTeX Suite, rendering remains closed-node only. Ordinary equations
+retain native rendering. There is no Tools-menu button or standalone window.
 
 Zotero saves the source unchanged. There is no image fallback,
 visual editor or diagram caret/selection mapping. Without this plugin Zotero
@@ -33,7 +33,6 @@ and preserves SVG mask references. Both light and dark export themes inherit
 their normal colors. Fatal errors stop export; nonfatal warnings are reported
 after preparing the PDF. Export typography comes from LaTeX Suite's single
 print-style definition rather than a duplicated constant in this plugin.
-This is export-only integration; live preview remains disabled.
 
 ## Implementation and limitations
 
@@ -43,7 +42,8 @@ This is export-only integration; live preview remains disabled.
 - Layout uses Quiver's 26px coordinate system, then scales the complete diagram
   to the surrounding note font size. Bounds have no added padding or vertical margin.
 - Per-node hooks preserve native editing, undo and saving. Async rendering is
-  cancelled on editing, replacement, removal or shutdown.
+  cancelled on replacement, preview release, removal or shutdown. Live updates
+  are debounced, with stale results discarded and the last good diagram retained.
 - Transparent backgrounds/default colors inherit the note theme. Explicit
   non-black colors remain unchanged; Quiver treats black as its adaptive default.
 - The package contains only bootstrap, the note bundle, manifest and licenses.

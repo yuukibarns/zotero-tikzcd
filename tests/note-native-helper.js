@@ -63,11 +63,19 @@ C \arrow[r,"k"'] & D
   frame.windowUtils.sendMouseEvent('mousedown',rect.x+rect.width/2,rect.y+rect.height/2,0,1,0);
   frame.windowUtils.sendMouseEvent('mouseup',rect.x+rect.width/2,rect.y+rect.height/2,0,1,0);
   await waitFor(()=>!!w.math._innerView,'Click opens native source editor');
-  check(!doc.querySelector('math-display > .tikzcd-note-surface'),'No editing preview');
+  check(!doc.querySelector('math-display > .tikzcd-note-surface'),'No independent editing preview');
+  if(CONFIG.withLatex){
+    await waitFor(()=>doc.querySelector('#latex-suite-math-preview .tikzcd-diagram'),'Shared live preview attached');
+    check(frame.getComputedStyle(doc.getElementById('latex-suite-math-preview')).display!=='none','Shared panel visible');
+    check(doc.querySelectorAll('.tikzcd-note-surface').length===1,'One diagram surface only');
+  }
   inject(`var inner=math._innerView;inner.dispatch(inner.state.tr.insertText('X',0+${source.indexOf('A')},${source.indexOf('A')+1}));inner.focus();`);
   await Zotero.Promise.delay(300);
-  check(!doc.querySelector('.math-render .tikzcd-note-output')?.dataset.source?.includes('X \\arrow'),'Typing does not rerender');
-  if(CONFIG.withLatex){const p=doc.getElementById('latex-suite-math-preview');check(!p||frame.getComputedStyle(p).display==='none','No stale generic preview');}
+  if(CONFIG.withLatex){
+    await waitFor(()=>doc.querySelector('#latex-suite-math-preview .tikzcd-note-output')?.dataset.source?.includes('X \\arrow'),'Shared preview updates while editing');
+  }else{
+    check(!doc.querySelector('.math-render .tikzcd-note-output')?.dataset.source?.includes('X \\arrow'),'No independent live rendering');
+  }
   check(w.math._innerView.state.doc.textContent.includes('X \\arrow'),'Native source edit kept');
   if(CONFIG.withLatex){
     inject(`window.__latexSuiteDiagnosePrint=html=>window.exportedHTML=html;var menu=document.createElement('div');menu.className='popup';document.querySelector('.more-dropdown').append(menu);`);
