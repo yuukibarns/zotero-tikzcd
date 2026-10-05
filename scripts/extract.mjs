@@ -79,13 +79,26 @@ export async function extract() {
   parser = replaceOnce(parser, '            });\n\n            if (!this.eat("\\\\end{tikzcd}"))', '            };\n\n            if (!this.eat("\\\\end{tikzcd}"))');
   parser = replaceOnce(parser, '// We simply ignore these options.', `this.log(this.warn('Diagram spacing is not preserved by Quiver.', this.range_here()));`);
   parser = replaceOnce(parser, '// We simply ignore this option.', `this.log(this.warn('The cramped option is not preserved by Quiver.', this.range_here()));`);
+  // Upstream consumes the comma even when the next marking option is `text`
+  // rather than `pos`, breaking two of its own valid parser fixtures. Look
+  // ahead for the complete option name before consuming anything.
+  parser = replaceOnce(parser,
+    'if (this.eat(",") && this.eat_whitespace() && this.eat("pos")) {',
+    'if (this.eat(/^,\\s*pos(?=\\s*=)/)) {');
   // Prevent an enormous direction string/coordinate from creating a huge layout.
   let vertexConstructor = method('Vertex', 'constructor');
   const boundedConstructor = vertexConstructor.replace('super(ui.quiver,', `if (![position.x, position.y].every(v => Number.isInteger(v) && Math.abs(v) <= 100)) throw new Error('Grid coordinates must be integers between -100 and 100.');\n        super(ui.quiver,`);
   const generatedUI = await readFile(new URL('ui.mjs', out), 'utf8');
   await writeFile(new URL('ui.mjs', out), replaceOnce(generatedUI, vertexConstructor, boundedConstructor));
   await save('parser.mjs', parser);
-  for (const name of ['arrow.mjs','curve.mjs','ds.mjs']) await save(name, await read(name));
+  for (const name of ['arrow.mjs','curve.mjs','ds.mjs']) {
+    let source = await read(name);
+    if (name === 'arrow.mjs') {
+      // Remove an unreachable duplicate case without changing arrow geometry.
+      source = replaceOnce(source, 'case "mono":\n                    case "multimap":', 'case "mono":');
+    }
+    await save(name, source);
+  }
   // Only basic DOM helpers are needed. Multislider installs global listeners.
   const dom = await read('dom.mjs');
   const slider = dom.indexOf('DOM.Multislider =');
