@@ -1,12 +1,13 @@
 # TikZ-CD Preview — Zotero prototype
 
 An independent, offline Zotero 10 plugin for previewing Quiver-compatible
-`tikzcd` diagrams. **This is a renderer experiment, not yet note integration.**
+`tikzcd` diagrams, including standalone display-math nodes in notes.
+**This is an experimental integration using Zotero's private MathView API.**
 LaTeX Suite is unchanged and neither KaTeX nor Zotero needs to be patched.
 
 ## Try it
 
-Install `tikzcd-preview-0.1.0.xpi` using Zotero's Plugins window, then choose
+Install `tikzcd-preview-0.2.0.xpi` using Zotero's Plugins window, then choose
 **Tools → TikZ-CD Preview…**. Paste a complete `tikzcd` block and click Render
 (or Ctrl+Enter / Cmd+Enter). Rendering is explicit, not performed on every key.
 
@@ -17,9 +18,17 @@ C \arrow[r, "k"'] & D
 \end{tikzcd}
 ```
 
-It does not read/write your library, insert diagrams into notes, replace native
-math rendering, export images/PDF, or persist the source when the window closes.
-Keep your source separately. Those are follow-up features, not implicit behaviour.
+Alternatively, paste the block above into a **display math node** in a note.
+Closed nodes show the diagram; clicking opens Zotero's normal source editor,
+with a live diagram preview below it. Changes are debounced by 120 ms, and stale
+renders are discarded. Ordinary equations and inline math still use native KaTeX.
+LaTeX Suite's duplicate equation preview is hidden for diagram nodes only.
+
+The note retains its original editable LaTeX source, not a generated image.
+There is no insertion command, image/PDF export, or portable image fallback yet:
+without this plugin, Zotero cannot render the `tikzcd` source. Diagram click-to-source
+mapping and preview selection markers are not supported. The standalone Tools
+window does not save its source when closed; note sources are saved by Zotero.
 
 ## Architecture
 
@@ -30,8 +39,12 @@ Keep your source separately. Those are follow-up features, not implicit behaviou
   The script asserts expected structures so upstream changes fail visibly.
 - `src/renderer.mjs`: a per-render adapter with font readiness, measured grid
   layout, deterministic arrow shortening, cancellation and diagnostics.
-- `bootstrap.js`: only registers a local preview window and a Tools menu item.
-  Disable/uninstall removes the menu and closes plugin windows.
+- `src/note-integration.mjs`: checked, per-instance MathView hooks route standalone
+  diagrams without replacing KaTeX or changing the ProseMirror document. Native
+  source editing, undo and saving remain Zotero's responsibility.
+- `bootstrap.js`: registers a local preview window, a Tools menu item and a note
+  document observer. Disable removes the hooks, cancels renders, restores native
+  rendering, removes the menu and closes plugin windows.
 
 The extraction is a local render-only derivative, not a public upstream fork.
 Nothing is published automatically. Upstream: <https://github.com/varkor/quiver>.
@@ -69,6 +82,8 @@ npm run build
 npm test
 npm run package
 npm run test:native
+node tests/native.mjs --notes
+node tests/native.mjs --notes --with-latex
 ```
 
 `npm test` includes lifecycle/security/resource-limit checks and upstream parser
@@ -78,9 +93,11 @@ real geometry and plugin lifecycle, and writes `build/native-preview.png`.
 
 Builds are committed locally; pushing/publishing is a separate explicit step.
 
-Validated on Zotero 10.0.5 (Linux): 32 automated tests, including 24 upstream
+Validated on Zotero 10.0.5 (Linux): 40 automated tests, including 24 upstream
 valid parser fixtures; native rendering of the example, curved parallel arrows,
 loops, hook/epimorphism arrows and fraction/integral labels; repeated-render,
 error and disable cleanup. Four small native fixtures took 6–30 ms on this
 machine with fonts already loaded; this is not a general performance guarantee.
+Native note tests cover opening/editing/closing, unchanged note serialization,
+ordinary equations, disable/re-enable, and coexistence with LaTeX Suite.
 Other OS versions have not been tested.
