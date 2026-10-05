@@ -100,9 +100,14 @@ export async function renderTikzcd(container, source, { signal } = {}) {
     const top = rects.length ? Math.min(...rects.map(r => r.top - origin.top)) : 0;
     const right = rects.length ? Math.max(...rects.map(r => r.right - origin.left)) : 0;
     const bottom = rects.length ? Math.max(...rects.map(r => r.bottom - origin.top)) : 0;
-    const width = Math.ceil(right - left), height = Math.ceil(bottom - top);
+    // Quiver lays out in fixed 26px units. Scale the complete graph to the
+    // surrounding math node, rather than shrinking labels alone.
+    const inheritedSize = parseFloat(window.getComputedStyle(container).fontSize);
+    const scale = Number.isFinite(inheritedSize) && inheritedSize > 0 ? inheritedSize / 26 : 1;
+    const width = Math.ceil((right - left) * scale), height = Math.ceil((bottom - top) * scale);
     if (width > 16000 || height > 16000) throw new Error('Diagram dimensions exceed 16,000 pixels.');
-    graph.style.transform = `translate(${-left}px, ${-top}px)`;
+    graph.style.transformOrigin = '0 0';
+    graph.style.transform = `scale(${scale}) translate(${-left}px, ${-top}px)`;
     root.style.width = `${width}px`; root.style.height = `${height}px`;
     root.style.visibility = '';
     const diagnostics = [...ui.diagnostics, ...parser.diagnostics.map(d => ({

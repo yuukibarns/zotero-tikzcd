@@ -1,7 +1,7 @@
 {
   "manifest_version": 2,
   "name": "TikZ-CD Preview (Prototype)",
-  "version": "0.2.5",
+  "version": "0.2.6",
   "description": "Render Quiver-compatible tikz-cd diagrams in closed Zotero display-math nodes. No live editing preview; source is preserved.",
   "author": "yuukibarns",
   "applications": { "zotero": {

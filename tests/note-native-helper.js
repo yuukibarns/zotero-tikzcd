@@ -38,6 +38,9 @@ C \arrow[r,"k"'] & D
   const dr=diagramRoot.getBoundingClientRect(), sr=surface.getBoundingClientRect();
   check(Math.abs((dr.left+dr.right)-(sr.left+sr.right))<2,'Diagram centered');
   check(frame.getComputedStyle(diagramRoot.querySelector('.label')).fontSize==='26px','Quiver label sizing');
+  const graph=diagramRoot.querySelector('.tikzcd-graph');
+  const scale=new frame.DOMMatrix(frame.getComputedStyle(graph).transform).a;
+  check(Math.abs(scale*26-parseFloat(frame.getComputedStyle(surface).fontSize))<0.001,'Whole diagram matches note font size');
   check(frame.getComputedStyle(surface).marginTop==='0px','No extra outer margin');
   const bounds=[...diagramRoot.querySelectorAll('.label, .arrow > svg:not(.arrow-background)')].map(n=>n.getBoundingClientRect()).filter(r=>r.width||r.height);
   check(Math.abs(Math.min(...bounds.map(r=>r.left))-dr.left)<1,'No left padding');
