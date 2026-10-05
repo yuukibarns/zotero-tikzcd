@@ -18,7 +18,7 @@ export function installMathNodes(doc, { render = renderTikzcd } = {}) {
   style.dataset.tikzcdStyle = '';
   style.textContent = rendererCSS + `
 math-display[data-tikzcd] > .math-render { cursor:pointer; }
-.tikzcd-note-surface { display:block; width:100%; overflow:auto; text-align:center; background:transparent; color:inherit; margin:1em 0; }
+.tikzcd-note-surface { display:block; width:100%; overflow:auto; text-align:center; background:transparent; color:inherit; margin:0; }
 .tikzcd-note-output { display:block; min-height:36px; }
 .tikzcd-note-output > .tikzcd-diagram { display:block; margin-inline:auto; }
 .tikzcd-note-status { display:block; text-align:left; font:12px/1.5 system-ui,sans-serif; padding:6px 10px; color:inherit; white-space:pre-wrap; }

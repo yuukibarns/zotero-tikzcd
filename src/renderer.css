@@ -1,5 +1,5 @@
 /* Minimal render-only subset of Quiver's styling; see vendor/quiver/LICENSE. */
-.tikzcd-diagram { position: relative; display: inline-block; color: inherit; background: transparent; --cell-colour: currentColor; font-size: inherit; overflow: hidden; }
+.tikzcd-diagram { position: relative; display: inline-block; color: inherit; background: transparent; --cell-colour: currentColor; font-size: 26px; overflow: hidden; }
 .tikzcd-graph { position: absolute; left: 0; top: 0; width: 0; height: 0; }
 .tikzcd-diagram .vertex { position: absolute; }
 .tikzcd-diagram .vertex .content { position: absolute; transform: translate(-50%, -50%); z-index: 2; text-align: center; }

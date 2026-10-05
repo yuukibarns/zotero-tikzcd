@@ -95,13 +95,15 @@ export async function renderTikzcd(container, source, { signal } = {}) {
     const measurable = graph.querySelectorAll('.label, .arrow > svg:not(.arrow-background)');
     const origin = graph.getBoundingClientRect();
     const rects = [...measurable].map(n => n.getBoundingClientRect()).filter(r => r.width || r.height);
-    const left = Math.min(0, ...rects.map(r => r.left - origin.left));
-    const top = Math.min(0, ...rects.map(r => r.top - origin.top));
-    const right = Math.max(0, ...rects.map(r => r.right - origin.left));
-    const bottom = Math.max(0, ...rects.map(r => r.bottom - origin.top));
-    const width = Math.ceil(right - left + 32), height = Math.ceil(bottom - top + 32);
+    // Fit actual content, not the grid origin (which adds an empty half-cell).
+    const left = rects.length ? Math.min(...rects.map(r => r.left - origin.left)) : 0;
+    const top = rects.length ? Math.min(...rects.map(r => r.top - origin.top)) : 0;
+    const right = rects.length ? Math.max(...rects.map(r => r.right - origin.left)) : 0;
+    const bottom = rects.length ? Math.max(...rects.map(r => r.bottom - origin.top)) : 0;
+    const padding = 6; // Room for SVG strokes and antialiasing at the edges.
+    const width = Math.ceil(right - left + 2 * padding), height = Math.ceil(bottom - top + 2 * padding);
     if (width > 16000 || height > 16000) throw new Error('Diagram dimensions exceed 16,000 pixels.');
-    graph.style.transform = `translate(${16 - left}px, ${16 - top}px)`;
+    graph.style.transform = `translate(${padding - left}px, ${padding - top}px)`;
     root.style.width = `${width}px`; root.style.height = `${height}px`;
     root.style.visibility = '';
     const diagnostics = [...ui.diagnostics, ...parser.diagnostics.map(d => ({
