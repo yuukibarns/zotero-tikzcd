@@ -92,7 +92,7 @@ export async function renderTikzcd(container, source, { signal } = {}) {
     ui.layout();
     parser.post_layout();
     ui.quiver.rerender(ui);
-    const measurable = graph.querySelectorAll('.vertex .label, .arrow > svg:not(.arrow-background)');
+    const measurable = graph.querySelectorAll('.label, .arrow > svg:not(.arrow-background)');
     const origin = graph.getBoundingClientRect();
     const rects = [...measurable].map(n => n.getBoundingClientRect()).filter(r => r.width || r.height);
     const left = Math.min(0, ...rects.map(r => r.left - origin.left));

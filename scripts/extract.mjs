@@ -68,7 +68,10 @@ export async function extract() {
   const graphNode = graphAST.body.find(n => n.declaration?.id?.name === 'Quiver');
   const constantsNode = graphAST.body.find(n => n.type === 'ExpressionStatement' && graph.slice(n.start, n.end).startsWith('QuiverExport.CONSTANTS ='));
   if (!graphNode || !constantsNode) throw new Error('Upstream graph changed');
-  await save('quiver.mjs', `import { Point } from './ds.mjs';\n${graph.slice(graphNode.start, graphNode.end)}\nexport class QuiverExport {}\n${graph.slice(constantsNode.start, constantsNode.end)}`);
+  const graphMethods = graphNode.declaration.body.body
+    .filter(n => !['export', 'import'].includes(n.key.name))
+    .map(n => graph.slice(n.start, n.end)).join('\n');
+  await save('quiver.mjs', `export class Quiver {\n${graphMethods}\n}\nexport class QuiverExport {}\n${graph.slice(constantsNode.start, constantsNode.end)}`);
 
   let parser = await read('parser.mjs');
   parser = replaceOnce(parser, 'this.ui = ui;', 'this.ui = ui; this.post_layout = () => {};');
