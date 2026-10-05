@@ -15,7 +15,7 @@ async function run(){
   if(CONFIG.withLatex){for(let i=0;i<100&&!w.__latexSuite;i++)await Zotero.Promise.delay(100);check(w.__latexSuite,'LaTeX Suite also installed');}
   function inject(code){const script=frame.document.createElement('script');script.textContent=code;frame.document.head.append(script);script.remove();}
   const source=String.raw`\begin{tikzcd}
-A \arrow[r,"f"] \arrow[d,"g"'] & B \arrow[d,"h"] \\
+A \arrow[r,curve={height=24pt},"f"] \arrow[d,"g"'] & B \arrow[d,"h"] \\
 C \arrow[r,"k"'] & D
 \end{tikzcd}`;
   inject(`var v=_currentEditorInstance._editorCore.view,sc=v.state.schema;
