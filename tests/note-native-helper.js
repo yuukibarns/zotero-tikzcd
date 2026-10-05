@@ -51,8 +51,8 @@ C \arrow[r,"k"'] & D
   frame.windowUtils.sendMouseEvent('mousedown',rect.x+rect.width/2,rect.y+rect.height/2,0,1,0);
   frame.windowUtils.sendMouseEvent('mouseup',rect.x+rect.width/2,rect.y+rect.height/2,0,1,0);
   await waitFor(()=>!!w.math._innerView,'Click opens native source editor');
-  await waitFor(()=>doc.querySelector('math-display > .tikzcd-note-surface .tikzcd-diagram'),'Preview below source while editing');
-  if(CONFIG.withLatex){await Zotero.Promise.delay(300);const p=doc.getElementById('latex-suite-math-preview');check(!p||frame.getComputedStyle(p).display==='none','No duplicate LaTeX Suite preview');}
+  await waitFor(()=>doc.querySelector(CONFIG.withLatex?'#latex-suite-math-preview .tikzcd-diagram':'math-display > .tikzcd-note-surface .tikzcd-diagram'),'Preview below source while editing');
+  if(CONFIG.withLatex){const p=doc.getElementById('latex-suite-math-preview');check(p&&frame.getComputedStyle(p).display!=='none','Shared LaTeX Suite preview visible');check(doc.querySelectorAll('.tikzcd-note-surface').length===1,'Only one diagram surface');}
   inject(`var inner=math._innerView;inner.dispatch(inner.state.tr.insertText('X',0+${source.indexOf('A')},${source.indexOf('A')+1}));inner.focus();`);
   await waitFor(()=>doc.querySelector('.tikzcd-note-output')?.dataset.source?.includes('X \\arrow'),'Source edit refreshes diagram');
   check(w.math._innerView.state.doc.textContent.includes('X \\arrow'),'Native source edit kept');

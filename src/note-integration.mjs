@@ -23,9 +23,7 @@ math-display[data-tikzcd] > .math-render { cursor:pointer; }
 .tikzcd-note-output > .tikzcd-diagram { display:block; margin-inline:auto; }
 .tikzcd-note-status { display:block; text-align:left; font:12px/1.5 system-ui,sans-serif; padding:6px 10px; color:inherit; white-space:pre-wrap; }
 .tikzcd-note-status:empty { display:none; }
-/* LaTeX Suite's KaTeX source map and caret marker do not describe diagrams.
-   Its equation preview is hidden only in a node owned by this renderer. */
-math-display[data-tikzcd] #latex-suite-math-preview { display:none!important; }
+#latex-suite-math-preview .tikzcd-note-surface { margin:0; overflow:visible; }
 `;
   doc.head.append(style);
 
@@ -35,6 +33,19 @@ math-display[data-tikzcd] #latex-suite-math-preview { display:none!important; }
       !math._mathRenderElt || !math._mathSrcElt || !math._outerView ||
       !['renderMath','update','openEditor','closeEditor','destroy'].every(k => typeof math[k] === 'function')) return;
     let alive = true, surface = null, output = null, status = null;
+    let previewTarget = null;
+    function previewRequest(event) {
+      const detail = event.detail;
+      if (detail?.math !== math || !alive || !isTikzcd(source())) return;
+      previewTarget = detail.output; detail.handled = true; refresh();
+    }
+    function previewRelease(event) {
+      if (event.detail?.math !== math) return;
+      previewTarget = null;
+      if (alive && surface) mount();
+    }
+    doc.addEventListener('latex-suite-preview-request', previewRequest);
+    doc.addEventListener('latex-suite-preview-release', previewRelease);
     let timer = null, controller = null, current = null, requested = null, revision = 0;
     const hooks = [];
     const source = () => math._innerView?.state.doc.textContent ?? math._node.textContent;
@@ -69,7 +80,7 @@ math-display[data-tikzcd] #latex-suite-math-preview { display:none!important; }
           }
         });
       }
-      const parent = math._innerView ? node : math._mathRenderElt;
+      const parent = math._innerView ? (previewTarget || node) : math._mathRenderElt;
       if (surface.parentNode !== parent) {
         if (parent === math._mathRenderElt) parent.replaceChildren(surface);
         else parent.append(surface);
@@ -131,6 +142,8 @@ math-display[data-tikzcd] #latex-suite-math-preview { display:none!important; }
     function release(restoreNative) {
       if (!alive) return;
       alive = false;
+      doc.removeEventListener('latex-suite-preview-request', previewRequest);
+      doc.removeEventListener('latex-suite-preview-release', previewRelease);
       const wasDiagram = !!surface;
       clear();
       for (const unhook of hooks.reverse()) unhook();
